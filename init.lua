@@ -150,12 +150,19 @@ require('lazy').setup({
   {
     'mhinz/vim-startify',
     config = function()
-      vim.g.startify_bookmarks = {
-        { a = 'c:\\Develop\\app-astudio'},
-        { c = 'd:\\cli\\cl17.bat'},
-        { d = 'd:\\Develop\\cpp'},
-        { i = 'c:\\Users\\Admin\\AppData\\Local\\nvim\\init.lua'}
-      }
+      if vim.fn.has('macunix') == 1 then
+        vim.g.startify_bookmarks = {
+          { d = '~/Develop/'},
+          { i = '~/.config/nvim/init.lua'}
+        }
+      else
+        vim.g.startify_bookmarks = {
+          { a = 'c:\\Develop\\app-astudio'},
+          { c = 'd:\\cli\\cl17.bat'},
+          { d = 'd:\\Develop\\cpp'},
+          { i = 'c:\\Users\\Admin\\AppData\\Local\\nvim\\init.lua'}
+        }
+      end
       vim.g.startify_commands = {
         { l = {'Lazy', ':Lazy'}},
         { m = {'Mason', ':Mason'}}
@@ -239,6 +246,9 @@ require('lazy').setup({
     dependencies = {
       'nvim-treesitter/nvim-treesitter-textobjects',
     },
+    opts = function(_, opts)
+      opts.ignore_install = {'help'}
+    end,
     build = ':TSUpdate',
   },
 
