@@ -143,11 +143,33 @@ require('lazy').setup({
   },
 
   {
-    -- Theme inspired by Atom
-    'navarasu/onedark.nvim',
+    'rebelot/kanagawa.nvim',
     priority = 1000,
+  },
+
+  {
+    'mhinz/vim-startify',
     config = function()
-      vim.cmd.colorscheme 'onedark'
+      vim.g.startify_bookmarks = {
+        { a = 'c:\\Develop\\app-astudio'},
+        { c = 'd:\\cli\\cl17.bat'},
+        { d = 'd:\\Develop\\cpp'},
+        { i = 'c:\\Users\\Admin\\AppData\\Local\\nvim\\init.lua'}
+      }
+      vim.g.startify_commands = {
+        { l = {'Lazy', ':Lazy'}},
+        { m = {'Mason', ':Mason'}}
+      }
+      vim.g.startify_custom_header = {
+            "                                                      ",
+            "   ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗ ",
+            "   ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║ ",
+            "   ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║ ",
+            "   ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║ ",
+            "   ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║ ",
+            "   ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝ ",
+            "                                                      ",
+      }
     end,
   },
 
@@ -157,10 +179,10 @@ require('lazy').setup({
     -- See `:help lualine.txt`
     opts = {
       options = {
-        icons_enabled = false,
-        theme = 'onedark',
-        component_separators = '|',
-        section_separators = '',
+        icons_enabled = true,
+        theme = 'auto',
+        component_separators = { left = '', right = ''},
+        section_separators = { left = '', right = ''},
       },
     },
   },
@@ -174,6 +196,17 @@ require('lazy').setup({
       char = '┊',
       show_trailing_blankline_indent = false,
     },
+    config = function()
+      vim.g.indent_blankline_filetype_exclude = {
+        'lspinfo',
+        'packer',
+        'checkhealth',
+        'help',
+        'man',
+        '',
+        'startify'
+      }
+    end
   },
 
   -- "gc" to comment visual regions/lines
@@ -265,11 +298,57 @@ vim.o.completeopt = 'menuone,noselect'
 -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
 
+-- MY CUSTOM  OPTIONS
+vim.o.hlsearch = true
+vim.o.incsearch = true
+vim.o.cursorline = true
+vim.opt.listchars = {
+  eol = '⤶',
+  space = '·',
+  trail = '·',
+  extends = '◀',
+  precedes = '▶',
+  tab = '_'
+}
+vim.g.netrw_keepdir = 0
+
+
 -- [[ Basic Keymaps ]]
 
 -- Keymaps for better default experience
 -- See `:help vim.keymap.set()`
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
+
+-- MY CUSTOM KEYMAPS
+vim.keymap.set('n', '<Tab>', '<C-W>w<CR>', { silent = true })
+vim.keymap.set('n', '<S-Tab>', '<C-W>W<CR>', { silent = true })
+vim.keymap.set('n', '<F1>', ':Startify<CR>', { silent = true })
+vim.keymap.set('n', '<Backspace>', '<C-O>', {noremap = true})
+vim.keymap.set('n', '<S-Backspace>', '<C-I>', {noremap = true})
+vim.keymap.set('n', '<F2>', ':ClangdSwitchSourceHeader<CR>')
+vim.keymap.set('n', '<F3>', 'n', {noremap = true})
+vim.keymap.set('i', '<F3>', '<C-O>n', {noremap = true})
+vim.keymap.set('n', '<S-F3>', 'N', {noremap = true})
+vim.keymap.set('i', '<S-F3>', '<C-O>N', {noremap = true})
+vim.keymap.set('n', '<F12>', ':noh<CR>')
+vim.keymap.set('n', '<F11>', ':let g:neovide_fullscreen = !g:neovide_fullscreen<CR>')
+vim.keymap.set('n', '<leader>cd', ':cd %:p:h<CR>', {noremap = true, desc = 'CD to current file directory'})
+vim.keymap.set('n', '<leader>cf', ':!clang-format -i %<CR>', {noremap = true, desc = 'Format current file with clang-format'})
+vim.keymap.set('n', '<C-S>', ':w<CR>', { silent = true})
+
+vim.keymap.set('n', '<F10>', ':set list!<CR>')
+
+vim.keymap.set('n', '<F7>', ':w <bar> !cl17.bat %<CR>')
+vim.keymap.set('i', '<F7>', '<C-O><F7>', { remap = true })
+
+vim.keymap.set('n', '<F5>', ':w <bar> :execute expand("!cl17.bat " .. \'%:p\' .. " && " .. "remedybg.exe "  .. \'%:p:r\' .. ".exe")<CR>')
+vim.keymap.set('i', '<F5>', '<C-O><F5>', { remap = true })
+
+vim.keymap.set('n', '<C-F5>', ':w <bar> :execute expand("!cl17.bat " .. \'%:p\' .. " && " .. \'%:p:r\' .. ".exe")<CR>')
+vim.keymap.set('n', '<F5>', '<C-O><F5>', { remap = true })
+
+
+vim.cmd("set langmap=ФИСВУАПРШОЛДЬТЩЗЙКЫЕГМЦЧНЯЖ;ABCDEFGHIJKLMNOPQRSTUVWXYZ:,фисвуапршолдьтщзйкыегмцчня;abcdefghijklmnopqrstuvwxyz")
 
 -- Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
@@ -298,6 +377,34 @@ require('telescope').setup {
     },
   },
 }
+
+require('kanagawa').setup({
+    compile = false,             -- enable compiling the colorscheme
+    undercurl = true,            -- enable undercurls
+    commentStyle = { italic = false },
+    functionStyle = {},
+    keywordStyle = { italic = false},
+    statementStyle = { bold = true },
+    typeStyle = {},
+    transparent = false,         -- do not set background color
+    dimInactive = false,         -- dim inactive window `:h hl-NormalNC`
+    terminalColors = true,       -- define vim.g.terminal_color_{0,17}
+    colors = {                   -- add/modify theme and palette colors
+        palette = {},
+        theme = { wave = {}, lotus = {}, dragon = {}, all = {} },
+    },
+    overrides = function(colors) -- add/modify highlights
+        return {}
+    end,
+    theme = "wave",              -- Load "wave" theme when 'background' option is not set
+    background = {               -- map the value of 'background' option to a theme
+        dark = "wave",           -- try "dragon" !
+        light = "lotus"
+    },
+})
+
+-- setup must be called before loading
+vim.cmd("colorscheme kanagawa")
 
 -- Enable telescope fzf native, if installed
 pcall(require('telescope').load_extension, 'fzf')
@@ -413,7 +520,7 @@ local on_attach = function(_, bufnr)
   nmap('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
   nmap('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
 
-  nmap('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
+  nmap('gD', vim.lsp.buf.definition, '[G]oto [D]efinition')
   nmap('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
   nmap('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
   nmap('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
@@ -425,7 +532,7 @@ local on_attach = function(_, bufnr)
   nmap('<C-k>', vim.lsp.buf.signature_help, 'Signature Documentation')
 
   -- Lesser used LSP functionality
-  nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+  nmap('gd', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
   nmap('<leader>wa', vim.lsp.buf.add_workspace_folder, '[W]orkspace [A]dd Folder')
   nmap('<leader>wr', vim.lsp.buf.remove_workspace_folder, '[W]orkspace [R]emove Folder')
   nmap('<leader>wl', function()
