@@ -155,7 +155,7 @@ require('lazy').setup({
           { d = '~/Develop/'},
           { i = '~/.config/nvim/init.lua'}
         }
-      else
+      elseif vim.fn.has('win64') == 1 then
         vim.g.startify_bookmarks = {
           { a = 'c:\\Develop\\app-astudio'},
           { c = 'd:\\cli\\cl17.bat'},
@@ -321,6 +321,7 @@ vim.opt.listchars = {
   tab = '_'
 }
 vim.g.netrw_keepdir = 0
+vim.o.virtualedit = 'onemore'
 
 
 -- [[ Basic Keymaps ]]
@@ -335,6 +336,7 @@ vim.keymap.set('n', '<S-Tab>', '<C-W>W<CR>', { silent = true })
 vim.keymap.set('n', '<F1>', ':Startify<CR>', { silent = true })
 vim.keymap.set('n', '<Backspace>', '<C-O>', {noremap = true})
 vim.keymap.set('n', '<S-Backspace>', '<C-I>', {noremap = true})
+vim.keymap.set('n', '<End>', '<End>l', {noremap = true})
 vim.keymap.set('n', '<F2>', ':ClangdSwitchSourceHeader<CR>')
 vim.keymap.set('n', '<F3>', 'n', {noremap = true})
 vim.keymap.set('i', '<F3>', '<C-O>n', {noremap = true})
@@ -345,18 +347,27 @@ vim.keymap.set('n', '<F11>', ':let g:neovide_fullscreen = !g:neovide_fullscreen<
 vim.keymap.set('n', '<leader>cd', ':cd %:p:h<CR>', {noremap = true, desc = 'CD to current file directory'})
 vim.keymap.set('n', '<leader>cf', ':!clang-format -i %<CR>', {noremap = true, desc = 'Format current file with clang-format'})
 vim.keymap.set('n', '<C-S>', ':w<CR>', { silent = true})
-
+vim.keymap.set('n', '<C-D>', 'viw');
 vim.keymap.set('n', '<F10>', ':set list!<CR>')
 
-vim.keymap.set('n', '<F7>', ':w <bar> !cl17.bat %<CR>')
-vim.keymap.set('i', '<F7>', '<C-O><F7>', { remap = true })
+if (vim.fn.has('win64')) == 1 then
+  -- C++ compiler stuff
+  vim.keymap.set('n', '<F7>', ':w <bar> !cl17.bat %<CR>')
+  vim.keymap.set('i', '<F7>', '<C-O><F7>', { remap = true })
 
-vim.keymap.set('n', '<F5>', ':w <bar> :execute expand("!cl17.bat " .. \'%:p\' .. " && " .. "remedybg.exe "  .. \'%:p:r\' .. ".exe")<CR>')
-vim.keymap.set('i', '<F5>', '<C-O><F5>', { remap = true })
+  vim.keymap.set('n', '<F5>', ':w <bar> :execute expand("!cl17.bat " .. \'%:p\' .. " && " .. "remedybg.exe "  .. \'%:p:r\' .. ".exe")<CR>')
+  vim.keymap.set('i', '<F5>', '<C-O><F5>', { remap = true })
 
-vim.keymap.set('n', '<C-F5>', ':w <bar> :execute expand("!cl17.bat " .. \'%:p\' .. " && " .. \'%:p:r\' .. ".exe")<CR>')
-vim.keymap.set('n', '<F5>', '<C-O><F5>', { remap = true })
+  vim.keymap.set('n', '<C-F5>', ':w <bar> :execute expand("!cl17.bat " .. \'%:p\' .. " && " .. \'%:p:r\' .. ".exe")<CR>')
+  vim.keymap.set('i', '<C-F5>', '<C-O><C-F5>', { remap = true })
+elseif vim.fn.has('macunix') == 1 then
+  -- TODO
+end
 
+--vim.keymap.set('v', '<C-C>', '"+y', { noremap = true });
+--vim.keymap.set('v', '<C-C>', '"+y', { noremap = true });
+--vim.keymap.set('v', '<C-X>', '"+x', { noremap = true });
+--vim.keymap.set('c', '<C-V>', '<C-R>+');
 
 vim.cmd("set langmap=ФИСВУАПРШОЛДЬТЩЗЙКЫЕГМЦЧНЯЖ;ABCDEFGHIJKLMNOPQRSTUVWXYZ:,фисвуапршолдьтщзйкыегмцчня;abcdefghijklmnopqrstuvwxyz")
 
@@ -651,6 +662,9 @@ cmp.setup {
     { name = 'luasnip' },
   },
 }
+
+vim.cmd.source('$VIMRUNTIME/mswin.vim')
+vim.cmd.behave('mswin')
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
