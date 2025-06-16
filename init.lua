@@ -969,7 +969,8 @@ vim.keymap.set('n', '<leader>/', function()
 end, { desc = '[/] Fuzzily search in current buffer' })
 
 vim.keymap.set('n', '<leader>gf', function() require('telescope.builtin').git_files({ recurse_submodules = true }) end, { desc = 'Search [G]it [F]iles' })
-vim.keymap.set('n', '<leader>gg', require('git_grep').live_grep, { desc = 'Search [G]it [G]rep' })
+vim.keymap.set('n', '<leader>gg', function() require('git_grep').live_grep({additional_args={'--ignore-case','--recurse-submodules'}}) end, { desc = 'Search [G]it [G]rep' })
+vim.keymap.set('n', '<leader>gG', function() require('git_grep').live_grep({additional_args={'--ignore-case','--', vim.fn.getcwd()}}) end, { desc = 'Search [G]it [G]rep in cwd' })
 vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
 vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
@@ -977,6 +978,9 @@ vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc
 vim.keymap.set('n', '<leader>sG', ':Telescope live_grep glob_pattern=*.', { desc = '[S]earch by [G]rep with glob pattern' })
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
+
+-- example how to pass additional arguments to git grep
+-- lua require('git_grep').live_grep({additional_args={'--', 'astudio/source/Panels/FillHoles'}})
 
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
@@ -1154,16 +1158,16 @@ mason_lspconfig.setup {
   ensure_installed = vim.tbl_keys(servers),
 }
 
-mason_lspconfig.setup_handlers {
-  function(server_name)
-    require('lspconfig')[server_name].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-      settings = servers[server_name],
-      filetypes = (servers[server_name] or {}).filetypes,
-    }
-  end
-}
+-- mason_lspconfig.setup_handlers {
+--   function(server_name)
+--     require('lspconfig')[server_name].setup {
+--       capabilities = capabilities,
+--       on_attach = on_attach,
+--       settings = servers[server_name],
+--       filetypes = (servers[server_name] or {}).filetypes,
+--     }
+--   end
+-- }
 
 require('lspconfig').clangd.setup {
   capabilities = capabilities,
@@ -1255,7 +1259,7 @@ cmp.setup {
   },
 }
 
-vim.cmd.source('$VIMRUNTIME/mswin.vim')
+vim.cmd.source('$VIMRUNTIME/scripts/mswin.vim')
 --vim.cmd.behave('mswin')
 
 -- The line beneath this is called `modeline`. See `:help modeline`
