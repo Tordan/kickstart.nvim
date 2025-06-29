@@ -817,18 +817,12 @@ vim.api.nvim_create_user_command('TelescopeColorschemePreview', function(_)
 end, {})
 
 vim.keymap.set("n", "<leader>tt", function() require("trouble").toggle() end, { desc = '[T]oggle Trouble' })
-vim.keymap.set("n", "<leader>tw", function() require("trouble").toggle("workspace_diagnostics") end,
-  { desc = '[T]oggle Trouble [W]orkspace diagnostics' })
-vim.keymap.set("n", "<leader>td", function() require("trouble").toggle("document_diagnostics") end,
-  { desc = '[T]oggle Trouble [D]ocument diagnostics' })
-vim.keymap.set("n", "<leader>tq", function() require("trouble").toggle("quickfix") end,
-  { desc = '[T]oggle Trouble [Q]uickfix' })
-vim.keymap.set("n", "<leader>tl", function() require("trouble").toggle("loclist") end,
-  { desc = '[T]oggle Trouble [L]oclist' })
-vim.keymap.set("n", "gR", function() require("trouble").toggle("lsp_references") end,
-  { desc = '[T]oggle Trouble LSP references' })
+vim.keymap.set("n", "<leader>tw", function() require("trouble").toggle("workspace_diagnostics") end, { desc = '[T]oggle Trouble [W]orkspace diagnostics' })
+vim.keymap.set("n", "<leader>td", function() require("trouble").toggle("document_diagnostics") end, { desc = '[T]oggle Trouble [D]ocument diagnostics' })
+vim.keymap.set("n", "<leader>tq", function() require("trouble").toggle("quickfix") end, { desc = '[T]oggle Trouble [Q]uickfix' })
+vim.keymap.set("n", "<leader>tl", function() require("trouble").toggle("loclist") end, { desc = '[T]oggle Trouble [L]oclist' })
+vim.keymap.set("n", "gR", function() require("trouble").toggle("lsp_references") end, { desc = '[T]oggle Trouble LSP references' })
 vim.keymap.set("n", "<leader>tz", ':ZenMode<CR>', { desc = '[T]oggle [Z]en mode' })
-
 
 --vim.keymap.set('v', '<C-C>', '"+y', { noremap = true });
 --vim.keymap.set('v', '<C-C>', '"+y', { noremap = true });
@@ -971,6 +965,14 @@ end, { desc = '[/] Fuzzily search in current buffer' })
 vim.keymap.set('n', '<leader>gf', function() require('telescope.builtin').git_files({ recurse_submodules = true }) end, { desc = 'Search [G]it [F]iles' })
 vim.keymap.set('n', '<leader>gg', function() require('git_grep').live_grep({additional_args={'--ignore-case','--recurse-submodules'}}) end, { desc = 'Search [G]it [G]rep' })
 vim.keymap.set('n', '<leader>gG', function() require('git_grep').live_grep({additional_args={'--ignore-case','--', vim.fn.getcwd()}}) end, { desc = 'Search [G]it [G]rep in cwd' })
+vim.keymap.set('n', '<leader>ge', function()
+    vim.ui.input({prompt = 'Enter git grep args: ' }, function(input)
+        if input == nil then
+            return
+        end
+        require('git_grep').live_grep({additional_args={'--ignore-case','--', input}})
+    end)
+end, { desc = 'Search [G]it Grep with [e]xplicit args' })
 vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
 vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
@@ -978,6 +980,17 @@ vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc
 vim.keymap.set('n', '<leader>sG', ':Telescope live_grep glob_pattern=*.', { desc = '[S]earch by [G]rep with glob pattern' })
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
+
+vim.keymap.set("n", "<leader>st", function()
+  local search = vim.fn.getreg('/')
+  if not search or search == '' then
+    return
+  end
+
+  vim.fn.setqflist({})
+  vim.cmd("vimgrep /" .. search .. "/j %")
+  require("trouble").open("quickfix")
+end, { desc = "Send search to Trouble" })
 
 -- example how to pass additional arguments to git grep
 -- lua require('git_grep').live_grep({additional_args={'--', 'astudio/source/Panels/FillHoles'}})
