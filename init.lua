@@ -132,6 +132,22 @@ require('lazy').setup({
   -- Useful plugin to show you pending keybinds.
   { 'folke/which-key.nvim', opts = {} },
 
+  -- Enhanced f,t, F, T motions
+  {
+    "folke/flash.nvim",
+    event = "VeryLazy",
+    ---@type Flash.Config
+    opts = {},
+    -- stylua: ignore
+    keys = {
+      { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
+      { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+      -- { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+    },
+  },
+
   -- Adds git related signs to the gutter, as well as utilities for managing changes
   {
     'lewis6991/gitsigns.nvim',
@@ -165,6 +181,9 @@ require('lazy').setup({
 
   -- QML syntax highlighting
   { "peterhoeg/vim-qml",    opts = {}, config = function(self, opts) end },
+
+  -- JAI syntax highlighting
+  { 'rluba/jai.vim' },
 
   -- Markdown Preview
   {
@@ -205,6 +224,33 @@ require('lazy').setup({
     event = "VeryLazy",
   },
 
+  {
+    'sindrets/diffview.nvim',
+    config = function()
+      require("diffview").setup({
+        keymaps = {
+          -- Disable the default normal mode mapping for `<tab>`:
+          view = {
+            { "n", "<tab>", false },
+            { "n", "<s-tab>", false },
+          },
+          file_panel = {
+            { "n", "<tab>", false },
+            { "n", "<s-tab>", false },
+          },
+          file_history_panel = {
+            { "n", "<tab>", false },
+            { "n", "<s-tab>", false },
+          },
+          option_panel = {
+            { "n", "<tab>", false },
+            { "n", "<s-tab>", false },
+          }
+        },
+      })
+    end
+  },
+
   -- Fancy folding regions
   {
     'kevinhwang91/nvim-ufo',
@@ -216,7 +262,8 @@ require('lazy').setup({
         return { "treesitter", "indent" }
       end,
       open_fold_hl_timeout = 400,
-      close_fold_kinds_for_ft = { default = { 'imports', 'comment' } },
+      -- close_fold_kinds_for_ft = { default = { 'imports', 'comment' } },
+      close_fold_kinds_for_ft = { default = { } },
       preview = {
         win_config = {
           border = { "", "─", "", "", "", "─", "", "" },
@@ -354,6 +401,7 @@ require('lazy').setup({
           { a = 'c:\\Develop\\app-astudio' },
           { c = 'd:\\cli\\cl17.bat' },
           { d = 'd:\\Develop\\cpp' },
+          { E = 'c:\\Users\\Admin\\Desktop\\NOTES\\editor.md' },
           { i = 'c:\\Users\\Admin\\AppData\\Local\\nvim\\init.lua' },
           { k = 'c:\\Users\\Admin\\Desktop\\NOTES\\knowledge.md' },
           { n = 'c:\\Users\\Admin\\Desktop\\NOTES\\ASTUDIO_MEETING_NOTES.md' },
@@ -390,6 +438,9 @@ require('lazy').setup({
         component_separators = { left = '', right = '' },
         section_separators = { left = '', right = '' },
       },
+      sections = {
+        lualine_c = { { 'filename', path = 2 } },
+      }
     },
   },
 
@@ -559,8 +610,13 @@ require('lazy').setup({
           hide_dotfiles = false,
           hide_gitignored = false,
           hide_hidden = false,
+        },
+        window = {
+          mappings = {
+            -- disable fuzzy finder
+            ["/"] = "noop"
+          }
         }
-
       },
       window = {
         position = "float",
@@ -712,6 +768,23 @@ acmd("BufWinEnter", {
   end
 })
 
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "jai",
+  callback = function()
+    vim.keymap.set("n", "<F5>", function()
+          local filepath = vim.fn.expand("%:p")         -- полный путь к текущему файлу
+          local exename = vim.fn.expand("%:r") .. ".exe" -- тот же путь, но без расширения + .exe
+          vim.cmd("write");
+          vim.cmd("!jai.bat " .. filepath .. "&& ".. exename)
+    end, { buffer = true })
+    vim.keymap.set("n", "<F7>", function()
+          local filepath = vim.fn.expand("%:p")         -- полный путь к текущему файлу
+          vim.cmd("write");
+          vim.cmd("!jai.bat " .. filepath)
+    end, { buffer = true })
+  end,
+})
+
 
 -- Custom filetypes mappings
 vim.filetype.add({
@@ -765,6 +838,7 @@ vim.keymap.set('n', '<A-Up>', '{', { noremap = true })
 vim.keymap.set('n', '<S-Del>', 'dd', { noremap = true })
 vim.keymap.set('i', '<S-Del>', '<C-O>dd', { noremap = true })
 vim.keymap.set('', '<Del>', '"_x', { noremap = true })
+vim.keymap.set('i', '<BS>', '<C-G>u<BS>', { noremap = true })
 vim.keymap.set('n', 'd', '"_d', { noremap = true })
 vim.keymap.set('v', 'd', '"_d', { noremap = true })
 vim.keymap.set('n', 'dd', '"_dd', { noremap = true })
@@ -966,7 +1040,7 @@ vim.keymap.set('n', '<leader>gf', function() require('telescope.builtin').git_fi
 vim.keymap.set('n', '<leader>gg', function() require('git_grep').live_grep({additional_args={'--ignore-case','--recurse-submodules'}}) end, { desc = 'Search [G]it [G]rep' })
 vim.keymap.set('n', '<leader>gG', function() require('git_grep').live_grep({additional_args={'--ignore-case','--', vim.fn.getcwd()}}) end, { desc = 'Search [G]it [G]rep in cwd' })
 vim.keymap.set('n', '<leader>ge', function()
-    vim.ui.input({prompt = 'Enter git grep args: ' }, function(input)
+    vim.ui.input({prompt = 'Args: ' }, function(input)
         if input == nil then
             return
         end
