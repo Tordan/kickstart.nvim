@@ -219,6 +219,8 @@ require('lazy').setup({
 
           map('K', function() vim.lsp.buf.hover({ border = "rounded"}) end, 'Hover Documentation')
 
+          map('<leader>d', vim.diagnostic.open_float, 'Open Diagnostic Popup')
+
           -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
           ---@param client vim.lsp.Client
           ---@param method vim.lsp.protocol.Method
