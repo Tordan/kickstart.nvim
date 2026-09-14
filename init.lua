@@ -219,6 +219,8 @@ require('lazy').setup({
 
           map('K', function() vim.lsp.buf.hover({ border = "rounded"}) end, 'Hover Documentation')
 
+          map('<leader>d', vim.diagnostic.open_float, 'Open Diagnostic Popup')
+
           -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
           ---@param client vim.lsp.Client
           ---@param method vim.lsp.protocol.Method
@@ -314,16 +316,13 @@ require('lazy').setup({
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
-      --
-      --  Add any additional override configuration in the following tables. Available keys are:
-      --  - cmd (table): Override the default command used to start the server
-      --  - filetypes (table): Override the default list of associated filetypes for the server
-      --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
-      --  - settings (table): Override the default settings passed when initializing the server.
-      --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
+      --  See `:help lsp-config` for information about keys and how to configure
+      ---@type table<string, vim.lsp.Config>
       local servers = {
-        clangd = {},
-        -- gopls = {},
+        clangd = {
+          cmd = { "clangd", "--header-insertion=never"}
+        },
+        gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -358,38 +357,40 @@ require('lazy').setup({
       --    :Mason
       --
       -- You can press `g?` for help in this menu.
-      --
-      -- `mason` had to be setup earlier: to configure its options see the
-      -- `dependencies` table for `nvim-lspconfig` above.
-      --
-      -- You can add other tools here that you want Mason to install
-      -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      require('mason-lspconfig').setup {
-        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
-      }
+      for name, server in pairs(servers) do
+        vim.lsp.config(name, server)
+        vim.lsp.enable(name)
+      end
+    end,
+  },
+
+  {
+    "m00qek/baleia.nvim",
+    version = "*",
+    config = function()
+      vim.g.baleia = require("baleia").setup({})
+
+      -- Command to colorize the current buffer
+      vim.api.nvim_create_user_command("BaleiaColorize", function()
+        vim.g.baleia.once(vim.api.nvim_get_current_buf())
+      end, { bang = true })
+
+      -- Command to show logs
+      vim.api.nvim_create_user_command("BaleiaLogs", vim.cmd.messages, { bang = true })
     end,
   },
 
 
   -- Useful plugin to show you pending keybinds.
   { 'folke/which-key.nvim', opts = {} },
+
+  { 'nvim-mini/mini.align', version = '*' },
 
   -- Enhanced f,t, F, T motions
   {
@@ -440,7 +441,7 @@ require('lazy').setup({
 
   -- QML syntax highlighting
   { "peterhoeg/vim-qml",    opts = {}, config = function(self, opts) end },
-  
+
   -- JAI syntax highlighting
   { 'rluba/jai.vim' },
 
@@ -460,11 +461,21 @@ require('lazy').setup({
     end,
   },
 
+  -- {
+  --   'ixru/nvim-markdown',
+  --   config = function()
+  --     vim.g.vim_markdown_no_default_key_mappings = 1
+  --   end
+  -- },
+
   {
-    'ixru/nvim-markdown',
-    config = function()
-      vim.g.vim_markdown_no_default_key_mappings = 1
-    end
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' }, -- if you use the mini.nvim suite
+    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.icons' },        -- if you use standalone mini plugins
+    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+    ---@module 'render-markdown'
+    ---@type render.md.UserConfig
+    opts = {},
   },
 
   {
@@ -482,7 +493,7 @@ require('lazy').setup({
     "junegunn/vim-easy-align",
     event = "VeryLazy",
   },
-  
+
   {
     'sindrets/diffview.nvim',
     config = function()
@@ -657,11 +668,14 @@ require('lazy').setup({
         }
       elseif vim.fn.has('win64') == 1 then
         vim.g.startify_bookmarks = {
-          { c = 'D:\\cli\\cl17.bat' },
-          { d = 'D:\\Develop\\cpp' },
-          -- { i = 'c:\\Users\\Admin\\AppData\\Local\\nvim\\init.lua' },
+          { b = 'W:\\Dev\\modules\\build.bat' },
+          { c = 'W:\\cli\\cl17.bat' },
           { i = '~\\AppData\\Local\\nvim\\init.lua' },
-          { p = '~\\Artec Studio Python Modules\\demo.py' },
+          { d = 'W:\\Dev\\modules' },
+          { t = '~\\todo.txt'},
+          { n = '~\\Desktop\\MEETING NOTES.md'},
+          { k = '~\\Desktop\\KNOWLEDGE.md'},
+          { h = '~\\Desktop\\mhost.md'}
         }
       end
       vim.g.startify_commands = {
@@ -669,6 +683,7 @@ require('lazy').setup({
         { m = { 'Mason', ':Mason' } }
       }
       vim.g.startify_files_number = 10
+      vim.g.startify_change_to_dir = 0
       vim.g.startify_custom_header = {
         "                                                      ",
         "   ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗ ",
@@ -1064,6 +1079,17 @@ vim.o.autoread = true
 local agrp = vim.api.nvim_create_augroup
 local acmd = vim.api.nvim_create_autocmd
 
+acmd("BufWritePre", {
+  pattern = "*",
+  command = [[%s/\s\+$//e]],
+})
+
+acmd({"BufEnter", "BufWinEnter"}, {
+    callback = function()
+        vim.fn.matchadd("WarningMsg", "@nocheckin")
+    end,
+})
+
 local _markdown = agrp("_markdown", { clear = true })
 acmd({ "BufNewFile", "BufRead" }, {
   pattern = "*.md",
@@ -1140,7 +1166,6 @@ vim.filetype.add({
     vcxproj = 'xml',
     props = 'xml',
     wsb = 'xml',
-    props = 'xml',
     desc = 'xml',
   }
 })
@@ -1165,10 +1190,12 @@ vim.keymap.set('n', '<F3>', 'n', { noremap = true })
 vim.keymap.set('i', '<F3>', '<C-O>n', { noremap = true })
 vim.keymap.set('n', '<S-F3>', 'N', { noremap = true })
 vim.keymap.set('i', '<S-F3>', '<C-O>N', { noremap = true })
+vim.keymap.set('n', '<F4>', ':Trouble telescope next jump=true<CR>', { silent = true})
+vim.keymap.set('i', '<F4>', '<C-O>:Trouble telescope next jump=true<CR>', { silent = true})
 vim.keymap.set('n', '<F12>', ':noh<CR> :IndentBlanklineRefresh<CR>', { silent = true })
 vim.keymap.set('n', '<Esc>', ':noh<CR><Esc>', { silent = true })
-vim.keymap.set('n', '<F11>', ':let g:neovide_fullscreen = !g:neovide_fullscreen<CR>')
 vim.keymap.set('n', '<leader>cd', ':tcd %:p:h<CR>', { noremap = true, desc = 'CD to current file\'s directory' })
+vim.keymap.set('n', '<leader>ch', ':Telescope command_history<CR>', { noremap = true, desc = '[C]ommand [H]istory' })
 -- vim.keymap.set('v', '<leader>cf', vim.lsp.buf.format)
 vim.keymap.set({ 'n', 'i' }, '<C-s>', ':w<CR>', { silent = true })
 vim.keymap.set('n', '<C-ы>', ':w<CR>', { silent = true })
@@ -1178,22 +1205,32 @@ vim.keymap.set('n', '<F9>', ':Inspect<CR>')
 vim.keymap.set('n', '<F10>', ':set list!<CR>', { silent = true })
 vim.keymap.set('i', '<F10>', '<C-O>:set list!<CR>', { silent = true })
 -- vim.keymap.set('n', '<leader>e', ':NvimTreeFindFileToggle!<CR>', {silent = true})
-vim.keymap.set('n', '<leader>e', ':Neotree position=float reveal dir=%:p:h<CR>', { silent = true })
+-- vim.keymap.set('n', '<leader>e', ':Neotree position=float reveal dir=%:p:h<CR>', { silent = true })
+vim.keymap.set('n', '<leader>e', function()
+  local git_root = vim.fs.root(0, ".git")
+
+  if git_root then
+    require("neo-tree.command").execute({ dir = git_root, position = 'float', reveal_force_cwd = true })
+  else
+    -- Fallback to current working directory if not in a Git repo
+    require("neo-tree.command").execute({ dir = vim.uv.cwd(), position = 'float', reveal_force_cwd = true })
+  end
+end, { silent = true })
 vim.keymap.set('v', '<A-Down>', ':m \'>+1<CR>gv=gv', { noremap = true })
 vim.keymap.set('v', '<A-Up>', ':m \'<-2<CR>gv=gv', { noremap = true })
 vim.keymap.set('n', '<A-Down>', '}', { noremap = true })
 vim.keymap.set('n', '<A-Up>', '{', { noremap = true })
-vim.keymap.set('n', '<S-Del>', 'dd', { noremap = true })
-vim.keymap.set('i', '<S-Del>', '<C-O>dd', { noremap = true })
+vim.keymap.set('n', '<S-Del>', '"_dd', { noremap = true })
+vim.keymap.set('i', '<S-Del>', '<C-O>"_dd', { noremap = true })
 vim.keymap.set('', '<Del>', '"_x', { noremap = true })
-vim.keymap.set('n', 'd', '"_d', { noremap = true })
-vim.keymap.set('v', 'd', '"_d', { noremap = true })
-vim.keymap.set('n', 'dd', '"_dd', { noremap = true })
-vim.keymap.set('v', 'dd', '"_dd', { noremap = true })
+vim.keymap.set('n', 'x', '"_x', { noremap = true })
+vim.keymap.set({'n', 'v'}, 'd', '"_d', { noremap = true })
+vim.keymap.set({'n', 'v'}, 'dd', '"_dd', { noremap = true })
 --vim.keymap.set('n', '<A-q>', '<C-W>q', { noremap = true})
 vim.keymap.set('n', '<A-q>', ':close<CR>', { noremap = true })
 vim.keymap.set('n', '<F8>', ':match NvimInternalError /\\s\\+$/<CR>', { noremap = true })
 vim.keymap.set('n', '<S-F8>', ':match<CR>', { noremap = true })
+vim.keymap.set('t', '<Esc>', '<C-\\><C-n>', { noremap = true})
 
 if vim.fn.has('win64') == 1 then
   -- C++ compiler stuff
@@ -1211,23 +1248,26 @@ elseif vim.fn.has('macunix') == 1 then
 end
 
 local function initBuildBat(_)
-  vim.keymap.set('n', '<leader>bb', ':wa <bar> !build.bat compile<CR>')
-  vim.keymap.set('n', '<leader>br', ':wa <bar> !build.bat<CR>')
-  vim.keymap.set('n', '<leader>bR', ':wa <bar> !build.bat run<CR>')
-  vim.keymap.set('n', '<leader>bm', ':wa <bar> !build.bat meta<CR>')
-  vim.keymap.set('n', '<leader>bd', ':wa <bar> !start /B build.bat debug<CR>')
+  vim.keymap.set('n', '<leader>bb', ':silent! wa <bar> !build.bat compile<CR>')
+  vim.keymap.set('n', '<leader>ba', ':silent! wa <bar> !build.bat build_all_targets<CR>')
+  vim.keymap.set('n', '<leader>br', ':silent! wa <bar> !build.bat run<CR>')
+  vim.keymap.set('n', '<leader>bd', ':silent! wa <bar> !build.bat debug<CR>')
+  vim.keymap.set('n', '<leader>bm', ':silent! wa <bar> !build.bat modhost<CR>')
+  vim.keymap.set('n', '<leader>bv', ':silent! wa <bar> !open-file-in-visual-studio-17.bat %<CR>')
 
-  -- vim.cmd("set makeprg=build.bat")
-  -- vim.keymap.set('n', '<leader>bq', ':wa <bar> :make compile<CR> :Trouble quickfix<CR>')
-  --vim.keymap.set('n', '<leader>br', ':w <bar> :make<CR> :cw<CR>')
+  vim.cmd("compiler! clang-cl")
+  vim.cmd("set makeprg=build.bat")
+  -- vim.keymap.set('n', '<leader>bm', ':make<CR>')
+  vim.keymap.set('n', '<leader>bq', ':wa <bar> :make compile<CR> :Trouble quickfix<CR>')
+  -- vim.keymap.set('n', '<leader>br', ':w <bar> :make<CR> :cw<CR>')
 
 
 
-  vim.cmd("set makeprg=compile-file-in-visual-studio.bat\\ %")
-  vim.cmd("set errorformat=%*\\\\d>%f(%l\\\\\\,%c):\\ %m")
-
-  vim.keymap.set('n', '<leader>bv', ':wa <bar> !compile-file-in-visual-studio.bat %<CR>')
-  vim.keymap.set('n', '<leader>bq', ':wa <bar> :make <CR> :Trouble quickfix<CR>')
+  -- vim.cmd("set makeprg=compile-file-in-visual-studio.bat\\ %")
+  -- vim.cmd("set errorformat=%*\\\\d>%f(%l\\\\\\,%c):\\ %m")
+  --
+  -- vim.keymap.set('n', '<leader>bv', ':wa <bar> !compile-file-in-visual-studio.bat %<CR>')
+  -- vim.keymap.set('n', '<leader>bq', ':wa <bar> :make <CR> :Trouble quickfix<CR>')
 end
 
 -- vim.api.nvim_create_user_command('InitBuildBat', initBuildBat, {})
@@ -1309,9 +1349,12 @@ require('telescope').setup {
         ["<PageUp>"] = require('telescope.actions').preview_scrolling_up,
         ["<c-p>"] = require('telescope.actions.layout').toggle_preview,
         ["<c-l>"] = require('telescope.actions.layout').cycle_layout_next,
+        ["<c-v>"] = false,
       },
       n = {
         ["<c-t>"] = require('trouble.sources.telescope').open,
+        ["dd"] = require('telescope.actions').delete_buffer,
+        ["<c-v>"] = false,
       },
     },
   },
@@ -1324,6 +1367,8 @@ require('telescope').setup {
     }
   },
 }
+
+require('mini.align').setup()
 
 require('kanagawa').setup({
   compile = true,    -- enable compiling the colorscheme
@@ -1371,17 +1416,23 @@ pcall(require('telescope').load_extension, 'fzf')
 -- See `:help telescope.builtin`
 vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[?] Find recently opened files' })
 vim.keymap.set('n', '<leader><space>', require('telescope.builtin').buffers, { desc = '[ ] Find existing buffers' })
+-- vim.keymap.set('n', '<leader>/', function()
+--   -- You can pass additional configuration to telescope to change theme, layout, etc.
+--   require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+--     winblend = 10,
+--     previewer = false,
+--     layout_config = {
+--       height = 0.9,
+--       width = 0.9
+--     }
+--   })
+-- end, { desc = '[/] Fuzzily search in current buffer' })
+--
 vim.keymap.set('n', '<leader>/', function()
-  -- You can pass additional configuration to telescope to change theme, layout, etc.
-  require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-    winblend = 10,
-    previewer = false,
-    layout_config = {
-      height = 0.9,
-      width = 0.9
-    }
+  require('telescope.builtin').live_grep({
+    search_dirs = { vim.fn.expand("%:p") }
   })
-end, { desc = '[/] Fuzzily search in current buffer' })
+end, { desc = '[/] Search in current buffer' })
 
 vim.keymap.set('n', '<leader>gf', function() require('telescope.builtin').git_files({ recurse_submodules = true }) end, { desc = 'Search [G]it [F]iles' })
 vim.keymap.set('n', '<leader>gg', function() require('git_grep').live_grep({additional_args={'--ignore-case','--recurse-submodules'}}) end, { desc = 'Search [G]it [G]rep' })
@@ -1396,7 +1447,8 @@ end, { desc = 'Search [G]it Grep with [E]xplicit arguments' })
 vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
 vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
-vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
+-- vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
+vim.keymap.set('n', '<leader>sg', function() require('telescope.builtin').live_grep({additional_args={'--no-ignore'}}) end, { desc = '[S]earch by [G]rep' })
 vim.keymap.set('n', '<leader>sG', ':Telescope live_grep glob_pattern=*.', { desc = '[S]earch by [G]rep with glob pattern' })
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
@@ -1429,24 +1481,8 @@ vim.cmd.source('$VIMRUNTIME/scripts/mswin.vim')
 
 vim.o.diffopt = "internal,closeoff"
 
-if vim.g.neovide and vim.fn.has('win64') == 1 then
-  --vim.opt.guifont = 'CaskaydiaMono Nerd Font Mono:h13'
-  vim.opt.guifont = 'Consolas NF:h11'
-  vim.g.neovide_padding_top = 0
-  vim.g.neovide_padding_bottom = 0
-  vim.g.neovide_padding_right = 0
-  vim.g.neovide_padding_left = 0
-  -- vim.g.neovide_floating_shadow = true
-  -- vim.g.neovide_floating_z_height = 10
-  -- vim.g.neovide_light_angle_degrees = 45
-  -- vim.g.neovide_light_radius = 5
-  vim.keymap.set({ "n", "v" }, "<C-+>", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor + 0.1<CR>")
-  vim.keymap.set({ "n", "v" }, "<C-->", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor - 0.1<CR>")
-  vim.keymap.set({ "n", "v" }, "<C-0>", ":lua vim.g.neovide_scale_factor = 1<CR>")
-end
-
 if vim.g.nvy == 1 then
-  vim.opt.guifont = 'CaskaydiaMono Nerd Font:h11.5'
+  vim.opt.guifont = 'CaskaydiaCove NFM:h11'
   -- vim.opt.guifont = 'Consolas NF:h11'
 end
 
@@ -1493,4 +1529,4 @@ function CenterAllPipeSections()
 end
 
 vim.keymap.set("x", "<leader>cp", ":lua CenterAllPipeSections()<CR>", { desc = "Центрировать между |", silent = true })
-
+vim.keymap.set('v', '<BS>', '"_d', { noremap = true, silent = true })
