@@ -1473,8 +1473,20 @@ vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnos
 -- vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 -- vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
 
-vim.cmd.source('$VIMRUNTIME/scripts/mswin.vim')
+-- vim.cmd.source('$VIMRUNTIME/scripts/mswin.vim')
 --vim.cmd.behave('mswin')
+vim.opt.clipboard = "unnamedplus"
+vim.opt.selection = "exclusive"
+vim.opt.keymodel = { "startsel", "stopsel" }
+vim.opt.selectmode = { "mouse", "key" }
+vim.keymap.set({ "n", "i", "v" }, "<C-s>", "<Cmd>write<CR>")
+vim.keymap.set("v", "<C-c>", '"+y')
+vim.keymap.set("v", "<C-x>", '"+d')
+vim.keymap.set({ "i", "c" }, "<C-v>", "<C-r><C-o>+")
+vim.keymap.set({ "n", "v" }, "<C-v>", '"+P')
+vim.keymap.set({ "n", "i" }, "<C-z>", "<Cmd>undo<CR>")
+vim.keymap.set({ "n", "i" }, "<C-y>", "<Cmd>redo<CR>")
+vim.keymap.set({ "n", "i", "v" }, "<C-a>", "<Esc>ggVG")
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
