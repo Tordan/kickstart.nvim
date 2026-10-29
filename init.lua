@@ -709,6 +709,7 @@ require('lazy').setup({
         section_separators = { left = '', right = '' },
       },
       sections = {
+        -- lualine_a = { {'mode', icon = ''} },
         lualine_c = { { 'filename', path = 2 } },
       }
     },
@@ -1057,6 +1058,7 @@ vim.o.wrap = false
 vim.o.hlsearch = true
 vim.o.incsearch = true
 vim.o.cursorline = true
+vim.o.whichwrap = 'b,s,[,],<,>'
 vim.opt.listchars = {
   eol = '⤶',
   space = '·',
@@ -1231,6 +1233,7 @@ vim.keymap.set('n', '<A-q>', ':close<CR>', { noremap = true })
 vim.keymap.set('n', '<F8>', ':match NvimInternalError /\\s\\+$/<CR>', { noremap = true })
 vim.keymap.set('n', '<S-F8>', ':match<CR>', { noremap = true })
 vim.keymap.set('t', '<Esc>', '<C-\\><C-n>', { noremap = true})
+vim.keymap.set('n', '<leader>q', '<cmd>bp | sp | bn | bd<CR>', { silent = true, desc = 'Delete current buffer but keep window open' })
 
 if vim.fn.has('win64') == 1 then
   -- C++ compiler stuff
@@ -1253,7 +1256,7 @@ local function initBuildBat(_)
   vim.keymap.set('n', '<leader>br', ':silent! wa <bar> !build.bat run<CR>')
   vim.keymap.set('n', '<leader>bd', ':silent! wa <bar> !build.bat debug<CR>')
   vim.keymap.set('n', '<leader>bm', ':silent! wa <bar> !build.bat modhost<CR>')
-  vim.keymap.set('n', '<leader>bv', ':silent! wa <bar> !open-file-in-visual-studio-17.bat %<CR>')
+  vim.keymap.set('n', '<leader>bv', ':silent! wa <bar> !open-file-in-visual-studio-17.bat %<CR><CR>')
 
   vim.cmd("compiler! clang-cl")
   vim.cmd("set makeprg=build.bat")
