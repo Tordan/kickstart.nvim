@@ -428,7 +428,7 @@ require('lazy').setup({
 
   -- QML syntax highlighting
   { "peterhoeg/vim-qml",    opts = {}, config = function(self, opts) end },
-  
+
   -- JAI syntax highlighting
   { 'rluba/jai.vim' },
 
@@ -470,7 +470,7 @@ require('lazy').setup({
     "junegunn/vim-easy-align",
     event = "VeryLazy",
   },
-  
+
   {
     'sindrets/diffview.nvim',
     config = function()
@@ -682,6 +682,7 @@ require('lazy').setup({
         section_separators = { left = '', right = '' },
       },
       sections = {
+        lualine_a = { { 'mode', icon = '' } },
         lualine_c = { { 'filename', path = 2 } },
       }
     },
@@ -934,6 +935,12 @@ require('lazy').setup({
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
+
+      },
+
+      -- I don't like the blink.cmp behavior in cmdline so disable it
+      cmdline = {
+        enabled = false
       },
 
       appearance = {
@@ -1052,6 +1059,17 @@ vim.o.autoread = true
 local agrp = vim.api.nvim_create_augroup
 local acmd = vim.api.nvim_create_autocmd
 
+acmd("BufWritePre", {
+  pattern = "*",
+  command = [[%s/\s\+$//e]],
+})
+
+acmd({"BufEnter", "BufWinEnter"}, {
+    callback = function()
+        vim.fn.matchadd("WarningMsg", "@nocheckin")
+    end,
+})
+
 local _markdown = agrp("_markdown", { clear = true })
 acmd({ "BufNewFile", "BufRead" }, {
   pattern = "*.md",
@@ -1166,7 +1184,17 @@ vim.keymap.set('n', '<F9>', ':Inspect<CR>')
 vim.keymap.set('n', '<F10>', ':set list!<CR>', { silent = true })
 vim.keymap.set('i', '<F10>', '<C-O>:set list!<CR>', { silent = true })
 -- vim.keymap.set('n', '<leader>e', ':NvimTreeFindFileToggle!<CR>', {silent = true})
-vim.keymap.set('n', '<leader>e', ':Neotree position=float reveal dir=%:p:h<CR>', { silent = true })
+-- vim.keymap.set('n', '<leader>e', ':Neotree position=float reveal dir=%:p:h<CR>', { silent = true })
+vim.keymap.set('n', '<leader>e', function()
+  local git_root = vim.fs.root(0, ".git")
+
+  if git_root then
+    require("neo-tree.command").execute({ dir = git_root, position = 'float', reveal_force_cwd = true })
+  else
+    -- Fallback to current working directory if not in a Git repo
+    require("neo-tree.command").execute({ dir = vim.uv.cwd(), position = 'float', reveal_force_cwd = true })
+  end
+end, { silent = true })
 vim.keymap.set('v', '<A-Down>', ':m \'>+1<CR>gv=gv', { noremap = true })
 vim.keymap.set('v', '<A-Up>', ':m \'<-2<CR>gv=gv', { noremap = true })
 vim.keymap.set('n', '<A-Down>', '}', { noremap = true })
@@ -1182,6 +1210,7 @@ vim.keymap.set('v', 'dd', '"_dd', { noremap = true })
 vim.keymap.set('n', '<A-q>', ':close<CR>', { noremap = true })
 vim.keymap.set('n', '<F8>', ':match NvimInternalError /\\s\\+$/<CR>', { noremap = true })
 vim.keymap.set('n', '<S-F8>', ':match<CR>', { noremap = true })
+vim.keymap.set('t', '<Esc>', '<C-\\><C-N>', { noremap = true})
 
 if vim.fn.has('win64') == 1 then
   -- C++ compiler stuff
@@ -1199,14 +1228,14 @@ elseif vim.fn.has('macunix') == 1 then
 end
 
 local function initBuildBat(_)
-  vim.keymap.set('n', '<leader>bb', ':wa <bar> !build.bat compile<CR>')
-  vim.keymap.set('n', '<leader>br', ':wa <bar> !build.bat<CR>')
-  vim.keymap.set('n', '<leader>bR', ':wa <bar> !build.bat run<CR>')
-  vim.keymap.set('n', '<leader>bm', ':wa <bar> !build.bat meta<CR>')
-  vim.keymap.set('n', '<leader>bd', ':wa <bar> !start /B build.bat debug<CR>')
+  vim.keymap.set('n', '<leader>bb', ':silent! wa <bar> !build.bat compile<CR>')
+  vim.keymap.set('n', '<leader>br', ':silent! wa <bar> !build.bat<CR>')
+  vim.keymap.set('n', '<leader>bR', ':silent! wa <bar> !build.bat run<CR>')
+  vim.keymap.set('n', '<leader>bm', ':silent! wa <bar> !build.bat meta<CR>')
+  vim.keymap.set('n', '<leader>bd', ':silent! wa <bar> !start /B build.bat debug<CR>')
 
   -- vim.cmd("set makeprg=build.bat")
-  -- vim.keymap.set('n', '<leader>bq', ':wa <bar> :make compile<CR> :Trouble quickfix<CR>')
+  -- vim.keymap.set('n', '<leader>bq', ':silent! wa <bar> :make compile<CR> :Trouble quickfix<CR>')
   --vim.keymap.set('n', '<leader>br', ':w <bar> :make<CR> :cw<CR>')
 
 
@@ -1214,8 +1243,8 @@ local function initBuildBat(_)
   vim.cmd("set makeprg=compile-file-in-visual-studio.bat\\ %")
   vim.cmd("set errorformat=%*\\\\d>%f(%l\\\\\\,%c):\\ %m")
 
-  vim.keymap.set('n', '<leader>bv', ':wa <bar> !compile-file-in-visual-studio.bat %<CR>')
-  vim.keymap.set('n', '<leader>bq', ':wa <bar> :make <CR> :Trouble quickfix<CR>')
+  vim.keymap.set('n', '<leader>bv', ':silent! wa <bar> !compile-file-in-visual-studio.bat %<CR>')
+  vim.keymap.set('n', '<leader>bq', ':silent! wa <bar> :make <CR> :Trouble quickfix<CR>')
 end
 
 -- vim.api.nvim_create_user_command('InitBuildBat', initBuildBat, {})
@@ -1384,7 +1413,8 @@ end, { desc = 'Search [G]it Grep with [E]xplicit arguments' })
 vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
 vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
-vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
+-- vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
+vim.keymap.set('n', '<leader>sg', function() require('telescope.builtin').live_grep({additional_args={'--no-ignore'}}) end, { desc = '[S]earch by [G]rep' })
 vim.keymap.set('n', '<leader>sG', ':Telescope live_grep glob_pattern=*.', { desc = '[S]earch by [G]rep with glob pattern' })
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
@@ -1481,4 +1511,4 @@ function CenterAllPipeSections()
 end
 
 vim.keymap.set("x", "<leader>cp", ":lua CenterAllPipeSections()<CR>", { desc = "Центрировать между |", silent = true })
-
+vim.keymap.set('v', '<BS>', '"_d', { noremap = true, silent = true })
